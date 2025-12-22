@@ -43,7 +43,6 @@ android {
 }
 
 dependencies {
-    implementation 'androidx.annotation:annotation:1.6.0'
-
+    implementation 'androidx.annotation:annotation:1.9.1'
     implementation 'com.getkeepsafe.relinker:relinker:1.4.5'
 }

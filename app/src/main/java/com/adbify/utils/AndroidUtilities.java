@@ -13,6 +13,7 @@ import android.widget.Toast;
 
 import androidx.annotation.DrawableRes;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.content.res.ResourcesCompat;
 
 import java.io.Closeable;
@@ -34,7 +35,7 @@ public class AndroidUtilities {
         }
     }
 
-    public static boolean isServiceRunning(Context context, Class<?> clazz) {
+    public static boolean isServiceRunning(@NonNull Context context, Class<?> clazz) {
         ActivityManager manager =
                 (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
         for (ActivityManager.RunningServiceInfo service :
@@ -67,12 +68,12 @@ public class AndroidUtilities {
         }
     }
 
-    public static float dpToPx(Context context, float dp) {
+    public static float dpToPx(@NonNull Context context, float dp) {
         return TypedValue.applyDimension(
                 TypedValue.COMPLEX_UNIT_DIP, dp, context.getResources().getDisplayMetrics());
     }
 
-    public static float pxToDp(Context context, float px) {
+    public static float pxToDp(@NonNull Context context, float px) {
         return px / context.getResources().getDisplayMetrics().density;
     }
 
@@ -164,6 +165,7 @@ public class AndroidUtilities {
         return new byte[0];
     }
 
+    @Nullable
     @SuppressLint("PrivateApi")
     public static String getSystemProperty(String key) {
         try {

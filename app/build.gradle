@@ -13,7 +13,7 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace "com.adbify"
-    compileSdk 34
+    compileSdk 36
     buildToolsVersion rootProject.ext.buildToolsVersion
 
     defaultConfig {
@@ -89,7 +89,7 @@ materialThemeBuilder {
     generateTextColors = true
 }
 
-configurations.all {
+configurations.configureEach {
     exclude group: 'androidx.appcompat', module: 'appcompat'
 }
 
@@ -97,26 +97,27 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation project(":terminalview")
 
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.0'
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.0'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2'
 
-    implementation 'androidx.core:core-ktx:1.9.0'
-    implementation 'com.google.android.material:material:1.11.0'
-    implementation 'androidx.activity:activity-ktx:1.6.1'
-    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'androidx.core:core-ktx:1.17.0'
+    implementation 'androidx.documentfile:documentfile:1.1.0'
+    implementation 'com.google.android.material:material:1.13.0'
+    implementation 'androidx.activity:activity-ktx:1.12.2'
+    implementation 'androidx.constraintlayout:constraintlayout:2.2.1'
 
-    implementation 'dev.rikka.rikkax.appcompat:appcompat:1.5.0.1'
+    implementation 'dev.rikka.rikkax.appcompat:appcompat:1.6.1'
     implementation 'dev.rikka.rikkax.core:core-ktx:1.4.1'
-    implementation 'dev.rikka.rikkax.material:material:2.5.1'
+    implementation 'dev.rikka.rikkax.material:material:2.7.2'
     implementation 'dev.rikka.rikkax.html:html-ktx:1.1.2'
     implementation 'dev.rikka.rikkax.insets:insets:1.3.0'
 
-    def lifecycle_version = "2.5.1"
+    def lifecycle_version = "2.10.0"
     implementation "androidx.lifecycle:lifecycle-runtime-ktx:$lifecycle_version"
     implementation "androidx.lifecycle:lifecycle-process:$lifecycle_version"
     implementation "androidx.lifecycle:lifecycle-common-java8:$lifecycle_version"
 
     implementation 'me.zhanghai.android.appiconloader:appiconloader:1.5.0'
 
-    implementation 'com.google.android.gms:play-services-ads:22.0.0'
+    implementation 'com.google.android.gms:play-services-ads:24.9.0'
 }

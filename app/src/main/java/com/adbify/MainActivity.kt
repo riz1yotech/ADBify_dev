@@ -70,12 +70,8 @@ class MainActivity : AppBarActivity(), ServiceConnection {
         try {
             val serviceIntent = Intent(this, TerminalService::class.java)
             startService(serviceIntent)
-            if (!bindService(
-                    serviceIntent,
-                    this,
-                    0
-                )
-            ) throw RuntimeException("bindService() failed")
+            if (!bindService(serviceIntent, this, 0))
+                throw RuntimeException("bindService() failed")
         } catch (e: Exception) {
             AndroidUtilities.toastLong(this, getString(R.string.terminal_service_start_error))
             isInvalidState = true
