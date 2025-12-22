@@ -1,79 +1,39 @@
-package com.adbify.terminal;
+package com.adbify.terminal
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+open class TerminalSessionClientBase : TerminalSessionClient {
 
-public class TerminalSessionClientBase implements TerminalSessionClient {
+    override fun onTextChanged(changedSession: TerminalSession) {}
 
-    public TerminalSessionClientBase() {
-    }
+    override fun onTitleChanged(updatedSession: TerminalSession) {}
 
-    @Override
-    public void onTextChanged(@NonNull TerminalSession changedSession) {
-    }
+    override fun onSessionFinished(finishedSession: TerminalSession) {}
 
-    @Override
-    public void onTitleChanged(@NonNull TerminalSession updatedSession) {
-    }
+    override fun onCopyTextToClipboard(session: TerminalSession, text: String?) {}
 
-    @Override
-    public void onSessionFinished(@NonNull TerminalSession finishedSession) {
-    }
+    override fun onPasteTextFromClipboard(session: TerminalSession?) {}
 
-    @Override
-    public void onCopyTextToClipboard(@NonNull TerminalSession session, String text) {
-    }
+    override fun onBell(session: TerminalSession) {}
 
-    @Override
-    public void onPasteTextFromClipboard(@Nullable TerminalSession session) {
-    }
+    override fun onColorsChanged(changedSession: TerminalSession) {}
 
-    @Override
-    public void onBell(@NonNull TerminalSession session) {
-    }
+    override fun onTerminalCursorStateChange(state: Boolean) {}
 
-    @Override
-    public void onColorsChanged(@NonNull TerminalSession changedSession) {
-    }
+    override fun setTerminalShellPid(session: TerminalSession, pid: Int) {}
 
-    @Override
-    public void onTerminalCursorStateChange(boolean state) {
-    }
+    override fun getTerminalCursorStyle(): Int? = null
 
-    @Override
-    public void setTerminalShellPid(@NonNull TerminalSession session, int pid) {
-    }
+    override fun logError(tag: String, message: String) {}
 
-    @Override
-    public Integer getTerminalCursorStyle() {
-        return null;
-    }
+    override fun logWarn(tag: String, message: String) {}
 
-    @Override
-    public void logError(String tag, String message) {
-    }
+    override fun logInfo(tag: String, message: String) {}
 
-    @Override
-    public void logWarn(String tag, String message) {
-    }
+    override fun logDebug(tag: String, message: String) {}
 
-    @Override
-    public void logInfo(String tag, String message) {
-    }
+    override fun logVerbose(tag: String, message: String) {}
 
-    @Override
-    public void logDebug(String tag, String message) {
-    }
+    override fun logStackTraceWithMessage(tag: String, message: String, e: Exception) {}
 
-    @Override
-    public void logVerbose(String tag, String message) {
-    }
-
-    @Override
-    public void logStackTraceWithMessage(String tag, String message, Exception e) {
-    }
-
-    @Override
-    public void logStackTrace(String tag, Exception e) {
-    }
+    override fun logStackTrace(tag: String, e: Exception) {}
 }
+

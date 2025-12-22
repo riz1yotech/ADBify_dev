@@ -1,114 +1,55 @@
-package com.adbify.terminal;
+package com.adbify.terminal
 
-import android.view.KeyEvent;
-import android.view.MotionEvent;
+import android.view.KeyEvent
+import android.view.MotionEvent
+import com.adbify.terminal.view.TerminalViewClient
 
-import com.adbify.terminal.view.TerminalViewClient;
+open class TerminalViewClientBase : TerminalViewClient {
 
-public class TerminalViewClientBase implements TerminalViewClient {
+    override fun onScale(scale: Float): Float = 1.0f
 
-    public TerminalViewClientBase() {
-    }
+    override fun onSingleTapUp(e: MotionEvent) {}
 
-    @Override
-    public float onScale(float scale) {
-        return 1.0f;
-    }
+    override fun shouldBackButtonBeMappedToEscape(): Boolean = false
 
-    @Override
-    public void onSingleTapUp(MotionEvent e) {
-    }
+    override fun shouldEnforceCharBasedInput(): Boolean = false
 
-    public boolean shouldBackButtonBeMappedToEscape() {
-        return false;
-    }
+    override fun shouldUseCtrlSpaceWorkaround(): Boolean = false
 
-    public boolean shouldEnforceCharBasedInput() {
-        return false;
-    }
+    override fun isTerminalViewSelected(): Boolean = true
 
-    public boolean shouldUseCtrlSpaceWorkaround() {
-        return false;
-    }
+    override fun copyModeChanged(copyMode: Boolean) {}
 
-    @Override
-    public boolean isTerminalViewSelected() {
-        return true;
-    }
+    override fun onKeyDown(keyCode: Int, e: KeyEvent, session: TerminalSession): Boolean = false
 
-    @Override
-    public void copyModeChanged(boolean copyMode) {
-    }
+    override fun onKeyUp(keyCode: Int, e: KeyEvent): Boolean = false
 
-    @Override
-    public boolean onKeyDown(int keyCode, KeyEvent e, TerminalSession session) {
-        return false;
-    }
+    override fun onLongPress(event: MotionEvent): Boolean = false
 
-    @Override
-    public boolean onKeyUp(int keyCode, KeyEvent e) {
-        return false;
-    }
+    override fun readControlKey(): Boolean = false
 
-    @Override
-    public boolean onLongPress(MotionEvent event) {
-        return false;
-    }
+    override fun readAltKey(): Boolean = false
 
-    @Override
-    public boolean readControlKey() {
-        return false;
-    }
+    override fun readShiftKey(): Boolean = false
 
-    @Override
-    public boolean readAltKey() {
-        return false;
-    }
+    override fun readFnKey(): Boolean = false
 
-    @Override
-    public boolean readShiftKey() {
-        return false;
-    }
+    override fun onCodePoint(codePoint: Int, ctrlDown: Boolean, session: TerminalSession): Boolean = false
 
-    @Override
-    public boolean readFnKey() {
-        return false;
-    }
+    override fun onEmulatorSet() {}
 
-    @Override
-    public boolean onCodePoint(int codePoint, boolean ctrlDown, TerminalSession session) {
-        return false;
-    }
+    override fun logError(tag: String, message: String) {}
 
-    @Override
-    public void onEmulatorSet() {
-    }
+    override fun logWarn(tag: String, message: String) {}
 
-    @Override
-    public void logError(String tag, String message) {
-    }
+    override fun logInfo(tag: String, message: String) {}
 
-    @Override
-    public void logWarn(String tag, String message) {
-    }
+    override fun logDebug(tag: String, message: String) {}
 
-    @Override
-    public void logInfo(String tag, String message) {
-    }
+    override fun logVerbose(tag: String, message: String) {}
 
-    @Override
-    public void logDebug(String tag, String message) {
-    }
+    override fun logStackTraceWithMessage(tag: String, message: String, e: Exception) {}
 
-    @Override
-    public void logVerbose(String tag, String message) {
-    }
-
-    @Override
-    public void logStackTraceWithMessage(String tag, String message, Exception e) {
-    }
-
-    @Override
-    public void logStackTrace(String tag, Exception e) {
-    }
+    override fun logStackTrace(tag: String, e: Exception) {}
 }
+

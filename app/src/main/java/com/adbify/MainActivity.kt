@@ -55,8 +55,7 @@ class MainActivity : AppBarActivity(), ServiceConnection {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         isOnResumeAfterOnCreate = true
-        if (savedInstanceState != null)
-            isActivityRecreated = savedInstanceState.getBoolean(ARG_ACTIVITY_RECREATED, false)
+        if (savedInstanceState != null) isActivityRecreated = savedInstanceState.getBoolean(ARG_ACTIVITY_RECREATED, false)
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -81,7 +80,7 @@ class MainActivity : AppBarActivity(), ServiceConnection {
 
     private fun setTerminalViewAndClients() {
         terminalSessionClient = TerminalSessionActivityClient(this)
-        terminalViewClient = TerminalViewClient(this, terminalSessionClient)
+        terminalViewClient = TerminalViewClient(this)
         binding.terminalView.setTerminalViewClient(terminalViewClient)
         binding.terminalView.post {
             binding.terminalView.setTypeface(Typeface.MONOSPACE)

@@ -1,189 +1,143 @@
-package com.adbify.terminal;
+package com.adbify.terminal
 
-import android.annotation.SuppressLint;
-import android.content.Intent;
-import android.view.InputDevice;
-import android.view.KeyEvent;
-import android.view.MotionEvent;
+import android.annotation.SuppressLint
+import android.content.Intent
+import android.view.InputDevice
+import android.view.KeyEvent
+import android.view.MotionEvent
+import com.adbify.MainActivity
+import com.adbify.R
+import com.adbify.utils.AndroidUtilities
+import com.adbify.utils.Utilities
 
-import com.adbify.MainActivity;
-import com.adbify.R;
-import com.adbify.utils.AndroidUtilities;
-import com.adbify.utils.Utilities;
+class TerminalViewClient(
+    private val activity: MainActivity
+) : TerminalViewClientBase() {
 
-import java.util.Objects;
+    private var terminalCursorBlinkerStateAlreadySet = false
 
-public class TerminalViewClient extends TerminalViewClientBase {
-    final MainActivity activity;
-
-    final TerminalSessionActivityClient terminalSessionActivityClient;
-
-    private boolean terminalCursorBlinkerStateAlreadySet;
-
-    public TerminalViewClient(
-            MainActivity activity, TerminalSessionActivityClient terminalSessionActivityClient) {
-        this.activity = activity;
-        this.terminalSessionActivityClient = terminalSessionActivityClient;
-    }
-
-    public MainActivity getActivity() {
-        return activity;
-    }
-
-    public void onCreate() {
-        activity.getTerminalView().setTextSize(TerminalSettingsHelper.getFontSize(activity));
-        activity.getTerminalView()
-                .setKeepScreenOn(TerminalSettingsHelper.shouldKeepScreenOn(activity));
-    }
-
-    public void onStart() {
-        activity.getTerminalView().setIsTerminalViewKeyLoggingEnabled(false);
-    }
-
-    public void onResume() {
-        terminalCursorBlinkerStateAlreadySet = false;
-        if (activity.getTerminalView().mEmulator != null) {
-            setTerminalCursorBlinkerState(true);
-            terminalCursorBlinkerStateAlreadySet = true;
+    fun onCreate() {
+        with(activity.terminalView) {
+            setTextSize(TerminalSettingsHelper.getFontSize(activity))
+            keepScreenOn = TerminalSettingsHelper.shouldKeepScreenOn(activity)
         }
     }
 
-    public void onStop() {
-        setTerminalCursorBlinkerState(false);
+    fun onStart() {
+        activity.terminalView.setIsTerminalViewKeyLoggingEnabled(false)
     }
 
-    @Override
-    public void onEmulatorSet() {
+    fun onResume() {
+        terminalCursorBlinkerStateAlreadySet = false
+        if (activity.terminalView.mEmulator != null) {
+            setTerminalCursorBlinkerState(true)
+            terminalCursorBlinkerStateAlreadySet = true
+        }
+    }
+
+    fun onStop() {
+        setTerminalCursorBlinkerState(false)
+    }
+
+    override fun onEmulatorSet() {
         if (!terminalCursorBlinkerStateAlreadySet) {
-            setTerminalCursorBlinkerState(true);
-            terminalCursorBlinkerStateAlreadySet = true;
+            setTerminalCursorBlinkerState(true)
+            terminalCursorBlinkerStateAlreadySet = true
         }
     }
 
-    @Override
-    public float onScale(float scale) {
+    override fun onScale(scale: Float): Float {
         if (scale < 0.9f || scale > 1.1f) {
-            boolean increase = scale > 1.f;
-            changeFontSize(increase);
-            return 1.0f;
+            val increase = scale > 1.0f
+            changeFontSize(increase)
+            return 1.0f
         }
-        return scale;
+        return scale
     }
 
-    @Override
-    public void onSingleTapUp(MotionEvent e) {
-        TerminalEmulator term = Objects.requireNonNull(activity.getCurrentSession()).getEmulator();
-        if (!term.isMouseTrackingActive() && !e.isFromSource(InputDevice.SOURCE_MOUSE)) {
-            AndroidUtilities.showSoftKeyboard(activity.getTerminalView());
+    override fun onSingleTapUp(e: MotionEvent) {
+        val term = activity.currentSession?.emulator ?: return
+        if (!term.isMouseTrackingActive && !e.isFromSource(InputDevice.SOURCE_MOUSE)) {
+            AndroidUtilities.showSoftKeyboard(activity.terminalView)
         }
     }
 
-    @Override
-    public boolean shouldBackButtonBeMappedToEscape() {
-        return false;
-    }
+    override fun shouldBackButtonBeMappedToEscape(): Boolean = false
 
-    @Override
-    public boolean shouldEnforceCharBasedInput() {
-        return true;
-    }
+    override fun shouldEnforceCharBasedInput(): Boolean = true
 
-    @Override
-    public boolean shouldUseCtrlSpaceWorkaround() {
-        return false;
-    }
+    override fun shouldUseCtrlSpaceWorkaround(): Boolean = false
 
-    @Override
-    public boolean isTerminalViewSelected() {
-        return true;
-    }
+    override fun isTerminalViewSelected(): Boolean = true
 
-    @Override
-    public void copyModeChanged(boolean copyMode) {
+    override fun copyModeChanged(copyMode: Boolean) {
+        // No implementation needed
     }
 
     @SuppressLint("RtlHardcoded")
-    @Override
-    public boolean onKeyDown(int keyCode, KeyEvent e, TerminalSession currentSession) {
-        if (keyCode == KeyEvent.KEYCODE_ENTER && !currentSession.isRunning()) {
-            activity.finishActivityIfNotFinishing();
-            return true;
+    override fun onKeyDown(keyCode: Int, e: KeyEvent, session: TerminalSession): Boolean {
+        if (keyCode == KeyEvent.KEYCODE_ENTER && !session.isRunning) {
+            activity.finishActivityIfNotFinishing()
+            return true
         }
-        return false;
+        return false
     }
 
-    @Override
-    public boolean onKeyUp(int keyCode, KeyEvent e) {
-        if (keyCode == KeyEvent.KEYCODE_BACK && activity.getTerminalView().mEmulator == null) {
-            activity.finishActivityIfNotFinishing();
-            return true;
+    override fun onKeyUp(keyCode: Int, e: KeyEvent): Boolean {
+        if (keyCode == KeyEvent.KEYCODE_BACK && activity.terminalView.mEmulator == null) {
+            activity.finishActivityIfNotFinishing()
+            return true
         }
-        return false;
+        return false
     }
 
-    @Override
-    public boolean readControlKey() {
-        return false;
+    override fun readControlKey(): Boolean = false
+
+    override fun readAltKey(): Boolean = false
+
+    override fun readShiftKey(): Boolean = false
+
+    override fun readFnKey(): Boolean = false
+
+    override fun onLongPress(event: MotionEvent): Boolean = false
+
+    override fun onCodePoint(codePoint: Int, ctrlDown: Boolean, session: TerminalSession): Boolean = false
+
+    fun changeFontSize(increase: Boolean) {
+        TerminalSettingsHelper.changeFontSize(activity, increase)
+        activity.terminalView.setTextSize(TerminalSettingsHelper.getFontSize(activity))
     }
 
-    @Override
-    public boolean readAltKey() {
-        return false;
-    }
-
-    @Override
-    public boolean readShiftKey() {
-        return false;
-    }
-
-    @Override
-    public boolean readFnKey() {
-        return false;
-    }
-
-    @Override
-    public boolean onLongPress(MotionEvent event) {
-        return false;
-    }
-
-    @Override
-    public boolean onCodePoint(int codePoint, boolean ctrlDown, TerminalSession session) {
-        return false;
-    }
-
-    public void changeFontSize(boolean increase) {
-        TerminalSettingsHelper.changeFontSize(activity, increase);
-        activity.getTerminalView().setTextSize(TerminalSettingsHelper.getFontSize(activity));
-    }
-
-    public void setTerminalCursorBlinkerState(boolean start) {
+    fun setTerminalCursorBlinkerState(start: Boolean) {
         if (start) {
-            if (activity.getTerminalView().setTerminalCursorBlinkerRate(0))
-                activity.getTerminalView().setTerminalCursorBlinkerState(true, true);
+            if (activity.terminalView.setTerminalCursorBlinkerRate(0)) {
+                activity.terminalView.setTerminalCursorBlinkerState(true, true)
+            }
         } else {
-            activity.getTerminalView().setTerminalCursorBlinkerState(false, true);
+            activity.terminalView.setTerminalCursorBlinkerState(false, true)
         }
     }
 
-    public void shareSessionTranscript() {
-        TerminalSession session = activity.getCurrentSession();
-        if (session == null) return;
-        String transcriptText = Utilities.getTerminalSessionTranscriptText(session, false, true);
-        if (transcriptText == null) return;
-        transcriptText =
-                Utilities.getTruncatedCommandOutput(
-                                transcriptText,
-                                Utilities.TRANSACTION_SIZE_LIMIT_IN_BYTES,
-                                false,
-                                true,
-                                false)
-                        .trim();
+    fun shareSessionTranscript() {
+        val session = activity.currentSession ?: return
+        var transcriptText = Utilities.getTerminalSessionTranscriptText(session, linesJoined = false, trim = true) ?: return
 
-        Intent sendIntent = new Intent();
-        sendIntent.setAction(Intent.ACTION_SEND);
-        sendIntent.putExtra(Intent.EXTRA_TEXT, transcriptText);
-        sendIntent.setType("text/plain");
-        Intent shareIntent = Intent.createChooser(sendIntent, getActivity().getString(R.string.title_share_transcript_with));
-        activity.startActivity(shareIntent);
+        transcriptText = Utilities.getTruncatedCommandOutput(
+            text = transcriptText,
+            maxLength = Utilities.TRANSACTION_SIZE_LIMIT_IN_BYTES,
+            fromEnd = false,
+            onNewline = true,
+            addPrefix = false
+        ).trim()
+
+        val sendIntent = Intent().apply {
+            action = Intent.ACTION_SEND
+            putExtra(Intent.EXTRA_TEXT, transcriptText)
+            type = "text/plain"
+        }
+
+        val shareIntent = Intent.createChooser(sendIntent, activity.getString(R.string.title_share_transcript_with))
+        activity.startActivity(shareIntent)
     }
 }
+

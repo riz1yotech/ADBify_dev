@@ -1,93 +1,107 @@
-package com.adbify.utils;
+package com.adbify.utils
 
-import com.adbify.terminal.TerminalBuffer;
-import com.adbify.terminal.TerminalEmulator;
-import com.adbify.terminal.TerminalSession;
+import com.adbify.terminal.TerminalSession
+import java.util.Locale
 
-import java.util.Locale;
+object Utilities {
+    const val TRANSACTION_SIZE_LIMIT_IN_BYTES = 100 * 1024 // 100KB
+    private val HEX_ARRAY = "0123456789ABCDEF".toCharArray()
 
-public class Utilities {
-    public static final int TRANSACTION_SIZE_LIMIT_IN_BYTES = 100 * 1024; // 100KB
-    protected static final char[] hexArray = "0123456789ABCDEF".toCharArray();
-
-    public static String quote(String s) {
-        return ("'" + s.replace("'", "'\\''") + "'");
+    fun quote(s: String): String {
+        return "'${s.replace("'", "'\\''")}'"
     }
 
-    public static String getTruncatedCommandOutput(
-            String text, int maxLength, boolean fromEnd, boolean onNewline, boolean addPrefix) {
-        if (text == null) return null;
-        String prefix = "(truncated) ";
-        if (addPrefix) maxLength = maxLength - prefix.length();
-        if (maxLength < 0 || text.length() < maxLength) return text;
-        if (fromEnd) {
-            text = text.substring(0, maxLength);
+    fun getTruncatedCommandOutput(
+        text: String,
+        maxLength: Int,
+        fromEnd: Boolean,
+        onNewline: Boolean,
+        addPrefix: Boolean
+    ): String {
+        //if (text == null) return null
+
+        val prefix = "(truncated) "
+        val adjustedMaxLength = if (addPrefix) maxLength - prefix.length else maxLength
+
+        if (adjustedMaxLength < 0 || text.length < adjustedMaxLength) return text
+
+        val truncatedText = if (fromEnd) {
+            text.substring(0, adjustedMaxLength)
         } else {
-            int cutOffIndex = text.length() - maxLength;
+            var cutOffIndex = text.length - adjustedMaxLength
             if (onNewline) {
-                int nextNewlineIndex = text.indexOf('\n', cutOffIndex);
-                if (nextNewlineIndex != -1 && nextNewlineIndex != text.length() - 1) {
-                    cutOffIndex = nextNewlineIndex + 1;
+                val nextNewlineIndex = text.indexOf('\n', cutOffIndex)
+                if (nextNewlineIndex != -1 && nextNewlineIndex != text.length - 1) {
+                    cutOffIndex = nextNewlineIndex + 1
                 }
             }
-            text = text.substring(cutOffIndex);
+            text.substring(cutOffIndex)
         }
-        if (addPrefix) text = prefix + text;
-        return text;
+
+        return if (addPrefix) prefix + truncatedText else truncatedText
     }
 
-    public static String getTerminalSessionTranscriptText(
-            TerminalSession terminalSession, boolean linesJoined, boolean trim) {
-        if (terminalSession == null) return null;
-        TerminalEmulator terminalEmulator = terminalSession.getEmulator();
-        if (terminalEmulator == null) return null;
-        TerminalBuffer terminalBuffer = terminalEmulator.getScreen();
-        if (terminalBuffer == null) return null;
-        String transcriptText;
-        if (linesJoined) transcriptText = terminalBuffer.getTranscriptTextWithFullLinesJoined();
-        else transcriptText = terminalBuffer.getTranscriptTextWithoutJoinedLines();
-        if (trim) transcriptText = transcriptText.trim();
-        return transcriptText;
+    fun getTerminalSessionTranscriptText(
+        terminalSession: TerminalSession?,
+        linesJoined: Boolean,
+        trim: Boolean
+    ): String? {
+        val terminalEmulator = terminalSession?.emulator ?: return null
+        val terminalBuffer = terminalEmulator.screen ?: return null
+
+        var transcriptText = if (linesJoined) {
+            terminalBuffer.transcriptTextWithFullLinesJoined
+        } else {
+            terminalBuffer.transcriptTextWithoutJoinedLines
+        }
+
+        if (trim) {
+            transcriptText = transcriptText.trim()
+        }
+
+        return transcriptText
     }
 
-    public static String capitalize(String string) {
-        return string.substring(0, 1).toUpperCase(Locale.US) + string.substring(1);
+    fun capitalize(string: String): String {
+        return string.substring(0, 1).uppercase(Locale.US) + string.substring(1)
     }
 
-    public static void replaceSubStringsInStringArrayItems(
-            String[] array, String find, String replace) {
-        if (array == null || array.length == 0) return;
-        for (int i = 0; i < array.length; i++) {
-            array[i] = array[i].replace(find, replace);
+    fun replaceSubStringsInStringArrayItems(
+        array: Array<String>?,
+        find: String,
+        replace: String
+    ) {
+        if (array.isNullOrEmpty()) return
+
+        for (i in array.indices) {
+            array[i] = array[i].replace(find, replace)
         }
     }
 
-    public static String bytesToHex(byte[] bytes) {
-        if (bytes == null) {
-            return "";
+    fun bytesToHex(bytes: ByteArray?): String {
+        if (bytes == null) return ""
+
+        val hexChars = CharArray(bytes.size * 2)
+        bytes.forEachIndexed { j, byte ->
+            val v = byte.toInt() and 0xFF
+            hexChars[j * 2] = HEX_ARRAY[v ushr 4]
+            hexChars[j * 2 + 1] = HEX_ARRAY[v and 0x0F]
         }
-        char[] hexChars = new char[bytes.length * 2];
-        int v;
-        for (int j = 0; j < bytes.length; j++) {
-            v = bytes[j] & 0xFF;
-            hexChars[j * 2] = hexArray[v >>> 4];
-            hexChars[j * 2 + 1] = hexArray[v & 0x0F];
-        }
-        return new String(hexChars);
+        return String(hexChars)
     }
 
-    public static byte[] hexToBytes(String hex) {
-        if (hex == null) {
-            return null;
+    fun hexToBytes(hex: String?): ByteArray? {
+        if (hex == null) return null
+
+        val len = hex.length
+        val data = ByteArray(len / 2)
+
+        for (i in 0 until len step 2) {
+            data[i / 2] = ((Character.digit(hex[i], 16) shl 4) +
+                          Character.digit(hex[i + 1], 16)).toByte()
         }
-        int len = hex.length();
-        byte[] data = new byte[len / 2];
-        for (int i = 0; i < len; i += 2) {
-            data[i / 2] =
-                    (byte)
-                            ((Character.digit(hex.charAt(i), 16) << 4)
-                                    + Character.digit(hex.charAt(i + 1), 16));
-        }
-        return data;
+
+        return data
     }
 }
+

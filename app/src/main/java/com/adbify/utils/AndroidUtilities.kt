@@ -1,179 +1,162 @@
-package com.adbify.utils;
+package com.adbify.utils
 
-import android.annotation.SuppressLint;
-import android.app.ActivityManager;
-import android.content.Context;
-import android.content.Intent;
-import android.graphics.drawable.Drawable;
-import android.util.TypedValue;
-import android.view.View;
-import android.view.ViewGroup;
-import android.view.inputmethod.InputMethodManager;
-import android.widget.Toast;
+import android.annotation.SuppressLint
+import android.app.ActivityManager
+import android.content.Context
+import android.content.Intent
+import android.graphics.drawable.Drawable
+import android.util.TypedValue
+import android.view.View
+import android.view.ViewGroup
+import android.view.inputmethod.InputMethodManager
+import android.widget.Toast
+import androidx.annotation.DrawableRes
+import androidx.core.content.res.ResourcesCompat
+import java.io.Closeable
+import java.io.IOException
+import java.lang.ref.WeakReference
+import java.nio.charset.StandardCharsets
 
-import androidx.annotation.DrawableRes;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.core.content.res.ResourcesCompat;
+object AndroidUtilities {
+    private var sToast: WeakReference<Toast>? = null
 
-import java.io.Closeable;
-import java.io.IOException;
-import java.lang.ref.WeakReference;
-import java.lang.reflect.Field;
-import java.nio.charset.StandardCharsets;
-import java.util.Objects;
-
-public class AndroidUtilities {
-    private static WeakReference<Toast> sToast;
-
-    public static void closeQuietly(final Closeable c) {
-        if (c != null) {
+    fun closeQuietly(c: Closeable?) {
+        c?.let {
             try {
-                c.close();
-            } catch (final IOException ignored) { // NOPMD NOSONAR
+                it.close()
+            } catch (ignored: IOException) {
+                // Ignored
             }
         }
     }
 
-    public static boolean isServiceRunning(@NonNull Context context, Class<?> clazz) {
-        ActivityManager manager =
-                (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
-        for (ActivityManager.RunningServiceInfo service :
-                manager.getRunningServices(Integer.MAX_VALUE)) {
-            if (clazz.getName().equals(service.service.getClassName())) {
-                return true;
+    fun isServiceRunning(context: Context, clazz: Class<*>): Boolean {
+        val manager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        for (service in manager.getRunningServices(Int.MAX_VALUE)) {
+            if (clazz.name == service.service.className) {
+                return true
             }
         }
-        return false;
+        return false
     }
 
-    public static void killServiceIfRunning(Context context, Class<?> clazz) {
-        Intent intent = new Intent(context, clazz);
+    fun killServiceIfRunning(context: Context, clazz: Class<*>) {
+        val intent = Intent(context, clazz)
         if (isServiceRunning(context, clazz)) {
-            context.stopService(intent);
+            context.stopService(intent)
         }
     }
 
-    public static int getPid(Process p) {
-        try {
-            Field f = p.getClass().getDeclaredField("pid");
-            f.setAccessible(true);
+    fun getPid(p: Process): Int {
+        return try {
+            val f = p.javaClass.getDeclaredField("pid")
+            f.isAccessible = true
             try {
-                return f.getInt(p);
+                f.getInt(p)
             } finally {
-                f.setAccessible(false);
+                f.isAccessible = false
             }
-        } catch (Throwable e) {
-            return -1;
+        } catch (e: Throwable) {
+            -1
         }
     }
 
-    public static float dpToPx(@NonNull Context context, float dp) {
+    fun dpToPx(context: Context, dp: Float): Float {
         return TypedValue.applyDimension(
-                TypedValue.COMPLEX_UNIT_DIP, dp, context.getResources().getDisplayMetrics());
+            TypedValue.COMPLEX_UNIT_DIP,
+            dp,
+            context.resources.displayMetrics
+        )
     }
 
-    public static float pxToDp(@NonNull Context context, float px) {
-        return px / context.getResources().getDisplayMetrics().density;
+    fun pxToDp(context: Context, px: Float): Float {
+        return px / context.resources.displayMetrics.density
     }
 
-    public static void setLayoutMarginsInDp(
-            @NonNull View view, int left, int top, int right, int bottom) {
-        Context context = view.getContext();
+    fun setLayoutMarginsInDp(view: View, left: Int, top: Int, right: Int, bottom: Int) {
+        val context = view.context
         setLayoutMarginsInPixels(
-                view,
-                (int) dpToPx(context, left),
-                (int) dpToPx(context, top),
-                (int) dpToPx(context, right),
-                (int) dpToPx(context, bottom));
+            view,
+            dpToPx(context, left.toFloat()).toInt(),
+            dpToPx(context, top.toFloat()).toInt(),
+            dpToPx(context, right.toFloat()).toInt(),
+            dpToPx(context, bottom.toFloat()).toInt()
+        )
     }
 
-    public static void setLayoutMarginsInPixels(
-            @NonNull View view, int left, int top, int right, int bottom) {
-        if (view.getLayoutParams() instanceof ViewGroup.MarginLayoutParams) {
-            ViewGroup.MarginLayoutParams params =
-                    (ViewGroup.MarginLayoutParams) view.getLayoutParams();
-            params.setMargins(left, top, right, bottom);
-            view.setLayoutParams(params);
+    fun setLayoutMarginsInPixels(view: View, left: Int, top: Int, right: Int, bottom: Int) {
+        if (view.layoutParams is ViewGroup.MarginLayoutParams) {
+            val params = view.layoutParams as ViewGroup.MarginLayoutParams
+            params.setMargins(left, top, right, bottom)
+            view.layoutParams = params
         }
     }
 
-    public static Drawable getDrawable(Context context, @DrawableRes int drawable) {
+    fun getDrawable(context: Context, @DrawableRes drawable: Int): Drawable? {
         return ResourcesCompat.getDrawable(
-                Objects.requireNonNull(context).getResources(),
-                drawable,
-                Objects.requireNonNull(context).getTheme());
+            context.resources,
+            drawable,
+            context.theme
+        )
     }
 
-    public static void showSoftKeyboard(View view) {
-        if (view == null) return;
+    fun showSoftKeyboard(view: View?) {
+        view ?: return
         try {
-            InputMethodManager inputManager =
-                    (InputMethodManager)
-                            view.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-            inputManager.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT);
-        } catch (Exception e) {
-            e.printStackTrace();
+            val inputManager = view.context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            inputManager.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 
-    public static void hideSoftKeyboard(View view) {
-        if (view == null) return;
+    fun hideSoftKeyboard(view: View?) {
+        view ?: return
         try {
-            InputMethodManager imm =
-                    (InputMethodManager)
-                            view.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-            if (!imm.isActive()) {
-                return;
+            val imm = view.context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            if (!imm.isActive) {
+                return
             }
-            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
-        } catch (Exception e) {
-            e.printStackTrace();
+            imm.hideSoftInputFromWindow(view.windowToken, 0)
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 
-    public static void toast(Context context, CharSequence msg) {
-        toast(context, msg, Toast.LENGTH_SHORT);
+    fun toast(context: Context, msg: CharSequence?) {
+        toast(context, msg, Toast.LENGTH_SHORT)
     }
 
-    public static void toastLong(Context context, CharSequence msg) {
-        toast(context, msg, Toast.LENGTH_LONG);
+    fun toastLong(context: Context, msg: CharSequence?) {
+        toast(context, msg, Toast.LENGTH_LONG)
     }
 
-    public static void toast(@NonNull Context context, CharSequence msg, int duaration) {
-        if (msg == null || duaration == -1) {
-            return;
+    fun toast(context: Context, msg: CharSequence?, duration: Int) {
+        if (msg == null || duration == -1) {
+            return
         }
-        if (sToast != null && sToast.get() != null) {
-            sToast.get().cancel();
-        }
-        Toast mToast =
-                Toast.makeText(
-                        context,
-                        msg,
-                        duaration);
-        mToast.show();
-        sToast = new WeakReference<>(mToast);
+        sToast?.get()?.cancel()
+        val mToast = Toast.makeText(context, msg, duration)
+        mToast.show()
+        sToast = WeakReference(mToast)
     }
 
-    public static byte[] getStringBytes(String src) {
-        try {
-            return src.getBytes(StandardCharsets.UTF_8);
-        } catch (Exception ignore) {
-
+    fun getStringBytes(src: String): ByteArray {
+        return try {
+            src.toByteArray(StandardCharsets.UTF_8)
+        } catch (ignore: Exception) {
+            ByteArray(0)
         }
-        return new byte[0];
     }
 
-    @Nullable
     @SuppressLint("PrivateApi")
-    public static String getSystemProperty(String key) {
-        try {
-            Class<?> props = Class.forName("android.os.SystemProperties");
-            return (String) props.getMethod("get", String.class).invoke(null, key);
-        } catch (Exception ignore) {
-
+    fun getSystemProperty(key: String): String? {
+        return try {
+            val props = Class.forName("android.os.SystemProperties")
+            props.getMethod("get", String::class.java).invoke(null, key) as String
+        } catch (ignore: Exception) {
+            null
         }
-        return null;
     }
 }
+

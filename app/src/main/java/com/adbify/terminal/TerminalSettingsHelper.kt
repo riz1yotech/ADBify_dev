@@ -1,54 +1,51 @@
-package com.adbify.terminal;
+package com.adbify.terminal
 
-import android.annotation.SuppressLint;
-import android.content.Context;
-import android.content.SharedPreferences;
+import android.content.Context
+import android.content.SharedPreferences
+import androidx.core.content.edit
+import com.adbify.utils.AndroidUtilities
 
-import androidx.annotation.NonNull;
+object TerminalSettingsHelper {
+    private const val KEY_KEEP_SCREEN_ON = "key_keep_screen_on"
+    private const val KEY_FONT_SIZE = "key_font_size"
 
-import com.adbify.utils.AndroidUtilities;
+    private var DEFAULT_FONT_SIZE = 0
+    private var MIN_FONT_SIZE = 0
+    private var MAX_FONT_SIZE = 0
 
-@SuppressLint("ApplySharedPref")
-public class TerminalSettingsHelper {
-    private static final String KEY_KEEP_SCREEN_ON = "key_keep_screen_on";
-    private static final String KEY_FONT_SIZE = "key_font_size";
-
-    private static int DEFAULT_FONT_SIZE;
-    private static int MIN_FONT_SIZE;
-    private static int MAX_FONT_SIZE;
-
-    // term
-    public static void changeFontSize(Context context, boolean increase) {
-        int fontSize = getFontSize(context);
-        fontSize += (increase ? 1 : -1) * 2;
-        fontSize = Math.max(MIN_FONT_SIZE, Math.min(fontSize, MAX_FONT_SIZE));
-        setFontSize(context, fontSize);
+    // Terminal
+    fun changeFontSize(context: Context, increase: Boolean) {
+        var fontSize = getFontSize(context)
+        fontSize += (if (increase) 1 else -1) * 2
+        fontSize = fontSize.coerceIn(MIN_FONT_SIZE, MAX_FONT_SIZE)
+        setFontSize(context, fontSize)
     }
 
-    public static int getFontSize(Context context) {
-        return getPreferences(context).getInt(KEY_FONT_SIZE, DEFAULT_FONT_SIZE);
+    fun getFontSize(context: Context): Int {
+        return getPreferences(context).getInt(KEY_FONT_SIZE, DEFAULT_FONT_SIZE)
     }
 
-    public static void setFontSize(Context context, int value) {
-        SharedPreferences.Editor edit = getPreferences(context).edit();
-        edit.putInt(KEY_FONT_SIZE, value);
-        edit.commit();
+    fun setFontSize(context: Context, value: Int) {
+        getPreferences(context).edit(commit = true) {
+            putInt(KEY_FONT_SIZE, value)
+        }
     }
 
-    public static boolean shouldKeepScreenOn(Context context) {
-        return getPreferences(context).getBoolean(KEY_KEEP_SCREEN_ON, true);
+    fun shouldKeepScreenOn(context: Context): Boolean {
+        return getPreferences(context).getBoolean(KEY_KEEP_SCREEN_ON, true)
     }
 
-    public static void setKeepScreenOn(Context context, boolean value) {
-        SharedPreferences.Editor edit = getPreferences(context).edit();
-        edit.putBoolean(KEY_KEEP_SCREEN_ON, value);
-        edit.commit();
+    fun setKeepScreenOn(context: Context, value: Boolean) {
+        getPreferences(context).edit(commit = true) {
+            putBoolean(KEY_KEEP_SCREEN_ON, value)
+        }
     }
 
-    public static SharedPreferences getPreferences(@NonNull Context context) {
-        DEFAULT_FONT_SIZE = (int) AndroidUtilities.dpToPx(context, 12);
-        MIN_FONT_SIZE = (int) AndroidUtilities.dpToPx(context, 8);
-        MAX_FONT_SIZE = (int) AndroidUtilities.dpToPx(context, 20);
-        return context.getSharedPreferences("settings", Context.MODE_PRIVATE);
+    fun getPreferences(context: Context): SharedPreferences {
+        DEFAULT_FONT_SIZE = AndroidUtilities.dpToPx(context, 12f).toInt()
+        MIN_FONT_SIZE = AndroidUtilities.dpToPx(context, 8f).toInt()
+        MAX_FONT_SIZE = AndroidUtilities.dpToPx(context, 20f).toInt()
+        return context.getSharedPreferences("settings", Context.MODE_PRIVATE)
     }
 }
+

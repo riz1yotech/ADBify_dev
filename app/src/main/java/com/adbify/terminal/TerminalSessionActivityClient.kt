@@ -1,116 +1,94 @@
-package com.adbify.terminal;
+package com.adbify.terminal
 
-import android.content.ClipData;
-import android.content.ClipboardManager;
-import android.content.Context;
-import android.text.TextUtils;
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import com.adbify.MainActivity
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+class TerminalSessionActivityClient(
+    private val activity: MainActivity
+) : TerminalSessionClientBase() {
 
-import com.adbify.MainActivity;
+    var currentTerminalSession: TerminalSession? = null
+        set(value) {
+            if (value == null) return
 
-public class TerminalSessionActivityClient extends TerminalSessionClientBase {
-    private final MainActivity activity;
+            val current = activity.terminalView.currentSession
+            if (current != null && current.mHandle == value.mHandle) {
+                return
+            }
 
-    public TerminalSessionActivityClient(MainActivity activity) {
-        this.activity = activity;
-    }
+            activity.terminalView.attachSession(value)
+            activity.terminalView.onScreenUpdated()
+            field = value
+        }
+        get() {
+            val service = activity.terminalService ?: return null
+            return service.getOrCreateTerminalSession()
+        }
 
-    public void onCreate() {
-    }
+    fun onCreate() {}
 
-    public void onStart() {
-        if (activity.getTerminalService() != null) {
-            setCurrentTerminalSession(getCurrentTerminalSession());
+    fun onStart() {
+        if (activity.terminalService != null) {
+            currentTerminalSession = currentTerminalSession
         }
     }
 
-    public void onResume() {
+    fun onResume() {}
+
+    fun onStop() {}
+
+    override fun onTextChanged(changedSession: TerminalSession) {
+        if (!activity.isVisible) return
+        activity.terminalView.onScreenUpdated()
     }
 
-    public void onStop() {
+    override fun onTitleChanged(updatedSession: TerminalSession) {}
+
+    override fun onSessionFinished(finishedSession: TerminalSession) {
+        activity.terminalService?.actionStopService()
+        activity.finishActivityIfNotFinishing()
     }
 
-    @Override
-    public void onTextChanged(@NonNull TerminalSession changedSession) {
-        if (!activity.isVisible) return;
-        if (activity.getTerminalView() != null) activity.getTerminalView().onScreenUpdated();
-    }
+    override fun onCopyTextToClipboard(session: TerminalSession, text: String?) {
+        if (!activity.isVisible) return
 
-    @Override
-    public void onTitleChanged(@NonNull TerminalSession updatedSession) {
-    }
-
-    @Override
-    public void onSessionFinished(@NonNull TerminalSession finishedSession) {
-        TerminalService service = activity.getTerminalService();
-        if (service != null) {
-            service.actionStopService();
-        }
-        activity.finishActivityIfNotFinishing();
-    }
-
-    @Override
-    public void onCopyTextToClipboard(@NonNull TerminalSession session, String text) {
-        if (!activity.isVisible) return;
-        ClipboardManager clipboard =
-                (ClipboardManager) activity.getSystemService(Context.CLIPBOARD_SERVICE);
+        val clipboard = activity.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         clipboard.setPrimaryClip(
-                new ClipData(null, new String[]{"text/plain"}, new ClipData.Item(text)));
+            ClipData(null, arrayOf("text/plain"), ClipData.Item(text))
+        )
     }
 
-    @Override
-    public void onPasteTextFromClipboard(@Nullable TerminalSession session) {
-        if (!activity.isVisible) return;
-        ClipboardManager clipboard =
-                (ClipboardManager) activity.getSystemService(Context.CLIPBOARD_SERVICE);
-        ClipData clipData = clipboard.getPrimaryClip();
+    override fun onPasteTextFromClipboard(session: TerminalSession?) {
+        if (!activity.isVisible) return
+
+        val clipboard = activity.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        val clipData = clipboard.primaryClip
+
         if (clipData != null) {
-            CharSequence paste = clipData.getItemAt(0).coerceToText(activity);
-            if (!TextUtils.isEmpty(paste))
-                activity.getTerminalView().mEmulator.paste(paste.toString());
+            val paste = clipData.getItemAt(0).coerceToText(activity)
+            if (!paste.isNullOrEmpty()) {
+                activity.terminalView.mEmulator.paste(paste.toString())
+            }
         }
     }
 
-    @Override
-    public void onBell(@NonNull TerminalSession session) {
-    }
+    override fun onBell(session: TerminalSession) {}
 
-    @Override
-    public void onColorsChanged(@NonNull TerminalSession changedSession) {
-    }
+    override fun onColorsChanged(changedSession: TerminalSession) {}
 
-    @Override
-    public void onTerminalCursorStateChange(boolean enabled) {
+    override fun onTerminalCursorStateChange(enabled: Boolean) {
         if (enabled && !activity.isVisible) {
-            return;
+            return
         }
-        activity.getTerminalView().setTerminalCursorBlinkerState(enabled, false);
+        activity.terminalView.setTerminalCursorBlinkerState(enabled, false)
     }
 
-    @Override
-    public void setTerminalShellPid(@NonNull TerminalSession terminalSession, int pid) {
-    }
+    override fun setTerminalShellPid(session: TerminalSession, pid: Int) {}
 
-    @Override
-    public Integer getTerminalCursorStyle() {
-        return TerminalEmulator.DEFAULT_TERMINAL_CURSOR_STYLE;
-    }
-
-    public TerminalSession getCurrentTerminalSession() {
-        TerminalService service = activity.getTerminalService();
-        if (service == null) return null;
-        return service.getOrCreateTerminalSession();
-    }
-
-    public void setCurrentTerminalSession(TerminalSession session) {
-        if (session == null) return;
-        TerminalSession current = activity.getTerminalView().getCurrentSession();
-        if (current != null && current.mHandle.equals(session.mHandle)) {
-            return;
-        }
-        activity.getTerminalView().attachSession(session);
-        activity.getTerminalView().onScreenUpdated();
+    override fun getTerminalCursorStyle(): Int {
+        return TerminalEmulator.DEFAULT_TERMINAL_CURSOR_STYLE
     }
 }
+
