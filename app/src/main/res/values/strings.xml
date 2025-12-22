@@ -2,10 +2,6 @@
 <resources>
     <string name="app_name" translatable="false">Adbify</string>
 
-    <!-- Admob Test -->
-    <string name="admob_app_id" translatable="false">ca-app-pub-3940256099942544~3347511713</string>
-    <string name="admob_test_open_ad_id" translatable="false">ca-app-pub-3940256099942544/3419835294</string>
-
     <string name="action_attachment">Attachment</string>
     <string name="action_keep_screen_on">Keep Screen On</string>
     <string name="action_kill_proccess">Kill Session</string>

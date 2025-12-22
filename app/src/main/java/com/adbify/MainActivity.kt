@@ -268,7 +268,6 @@ class MainActivity : AppBarActivity(), ServiceConnection {
                     == PackageManager.PERMISSION_GRANTED)
         ) {
             choiceFile.launch("*/*")
-            AdbifyApp.adShowEnabled = false
         } else {
             try {
                 AndroidUtilities.toastLong(this, getString(R.string.ask_for_permission))
@@ -278,13 +277,11 @@ class MainActivity : AppBarActivity(), ServiceConnection {
                 )
             } catch (e: Exception) {
                 choiceFile.launch("*/*")
-                AdbifyApp.adShowEnabled = false
             }
         }
     }
 
     private fun handleFileUri(context: Context, uri: Uri?) {
-        AdbifyApp.adShowEnabled = true
         if (uri == null) {
             AndroidUtilities.toastLong(context, getString(R.string.file_attach_failed))
             return
