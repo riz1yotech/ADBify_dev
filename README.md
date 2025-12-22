@@ -220,7 +220,7 @@ adb logcat *:E                        # Show errors only
    # Debug build
    ./gradlew assembleDebug
    
-   # Release build (unsigned)
+   # Release build (signed with project keystore)
    ./gradlew assembleRelease
    
    # Install to connected device
@@ -232,11 +232,144 @@ adb logcat *:E                        # Show errors only
    - Run → Run 'app' (Shift+F10)
    - Or: `./gradlew installDebug`
 
+### Building Signed Release APK
+
+The project includes a pre-configured keystore for public releases. The release APK will be automatically signed when you build.
+
+#### Quick Build (Recommended)
+
+```bash
+# Build signed release APK
+./gradlew assembleRelease
+
+# APK will be generated at:
+# app/build/outputs/apk/release/app-release.apk
+```
+
+#### Keystore Configuration
+
+The project uses `key.properties` file for signing configuration:
+
+```properties
+storeFile=../keystore.jks
+jksPassword=123456
+keyAlias=123456
+keyPassword=123456
+```
+
+**Note**: This is a public keystore for development and testing purposes. For production apps on Google Play Store, you should create your own keystore and keep it secure.
+
+#### Creating Your Own Keystore (Optional)
+
+If you want to use your own keystore for production:
+
+1. **Generate a new keystore**:
+   ```bash
+   keytool -genkey -v -keystore my-release-key.jks -keyalg RSA -keysize 2048 -validity 10000 -alias my-key-alias
+   ```
+
+2. **Update `key.properties`**:
+   ```properties
+   storeFile=my-release-key.jks
+   jksPassword=your_store_password
+   keyAlias=my-key-alias
+   keyPassword=your_key_password
+   ```
+
+3. **Rebuild**:
+   ```bash
+   ./gradlew clean assembleRelease
+   ```
+
+#### Build All Architecture Variants
+
+The project is configured to build separate APKs for each architecture plus a universal APK:
+
+```bash
+# Build all variants
+./gradlew assembleRelease
+
+# Output APKs:
+# app/build/outputs/apk/release/
+#   ├── app-arm64-v8a-release.apk      (ARM 64-bit - ~8MB)
+#   ├── app-armeabi-v7a-release.apk    (ARM 32-bit - ~7MB)
+#   ├── app-x86-release.apk            (Intel 32-bit - ~8MB)
+#   ├── app-x86_64-release.apk         (Intel 64-bit - ~9MB)
+#   └── app-universal-release.apk      (All architectures - ~30MB)
+```
+
+**Recommended for distribution**:
+- **Universal APK** (`app-universal-release.apk`) - Works on all devices
+- **Architecture-specific APKs** - Smaller size, upload all to GitHub releases
+
+#### Verify APK Signature
+
+```bash
+# Check if APK is properly signed
+jarsigner -verify -verbose -certs app/build/outputs/apk/release/app-release.apk
+
+# Should show: "jar verified."
+```
+
+#### Build and Install Release APK
+
+```bash
+# Build and install release APK to connected device
+./gradlew installRelease
+
+# Or manually install
+adb install -r app/build/outputs/apk/release/app-universal-release.apk
+```
+
 ### Build Outputs
 
 - **Debug APK**: `app/build/outputs/apk/debug/app-debug.apk`
-- **Release APK**: `app/build/outputs/apk/release/app-release.apk`
-- **Split APKs**: Individual APKs for each architecture in respective folders
+- **Release APK (Universal)**: `app/build/outputs/apk/release/app-universal-release.apk`
+- **Release APK (ARM64)**: `app/build/outputs/apk/release/app-arm64-v8a-release.apk`
+- **Release APK (ARM32)**: `app/build/outputs/apk/release/app-armeabi-v7a-release.apk`
+- **Release APK (x86)**: `app/build/outputs/apk/release/app-x86-release.apk`
+- **Release APK (x86_64)**: `app/build/outputs/apk/release/app-x86_64-release.apk`
+
+### Release Checklist
+
+Before publishing a release, ensure:
+
+- [ ] **Version updated** in `build.gradle`:
+  ```groovy
+  versionCode = 41  // Increment for each release
+  versionName = "2.7.0"  // Follow semantic versioning
+  ```
+- [ ] **Build release APK**: `./gradlew assembleRelease`
+- [ ] **Test on device**: Install and verify functionality
+- [ ] **Check APK size**: Ensure it's optimized (~8-10MB per architecture)
+- [ ] **Verify signature**: APK is properly signed
+- [ ] **Update changelog**: Document what's new
+- [ ] **Commit changes**: Push to GitHub
+- [ ] **Create release**: Tag and upload APK to GitHub Releases
+
+### Troubleshooting Build Issues
+
+**Issue: "Keystore not found"**
+```bash
+# Ensure key.properties and keystore.jks are in the project root
+ls -la keystore.jks key.properties
+```
+
+**Issue: "Signing config missing"**
+```bash
+# Sync Gradle files
+./gradlew --refresh-dependencies
+```
+
+**Issue: "Build failed with ProGuard errors"**
+```bash
+# Clean and rebuild
+./gradlew clean assembleRelease --stacktrace
+```
+
+**Issue: "NDK not found"**
+- Install NDK version 25.2.9519653 via SDK Manager
+- Or set `ANDROID_NDK_HOME` environment variable
 
 ## 🔍 How It Works
 
