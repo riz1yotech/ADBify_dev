@@ -34,7 +34,7 @@ public class TerminalSessionActivityClient extends TerminalSessionClientBase {
 
     @Override
     public void onTextChanged(@NonNull TerminalSession changedSession) {
-        if (!activity.isVisible()) return;
+        if (!activity.isVisible) return;
         if (activity.getTerminalView() != null) activity.getTerminalView().onScreenUpdated();
     }
 
@@ -53,7 +53,7 @@ public class TerminalSessionActivityClient extends TerminalSessionClientBase {
 
     @Override
     public void onCopyTextToClipboard(@NonNull TerminalSession session, String text) {
-        if (!activity.isVisible()) return;
+        if (!activity.isVisible) return;
         ClipboardManager clipboard =
                 (ClipboardManager) activity.getSystemService(Context.CLIPBOARD_SERVICE);
         clipboard.setPrimaryClip(
@@ -62,7 +62,7 @@ public class TerminalSessionActivityClient extends TerminalSessionClientBase {
 
     @Override
     public void onPasteTextFromClipboard(@Nullable TerminalSession session) {
-        if (!activity.isVisible()) return;
+        if (!activity.isVisible) return;
         ClipboardManager clipboard =
                 (ClipboardManager) activity.getSystemService(Context.CLIPBOARD_SERVICE);
         ClipData clipData = clipboard.getPrimaryClip();
@@ -83,7 +83,7 @@ public class TerminalSessionActivityClient extends TerminalSessionClientBase {
 
     @Override
     public void onTerminalCursorStateChange(boolean enabled) {
-        if (enabled && !activity.isVisible()) {
+        if (enabled && !activity.isVisible) {
             return;
         }
         activity.getTerminalView().setTerminalCursorBlinkerState(enabled, false);

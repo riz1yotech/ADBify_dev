@@ -39,19 +39,19 @@ class MainActivity : AppBarActivity(), ServiceConnection {
     private lateinit var binding: ActivityMainBinding
 
     var terminalService: TerminalService? = null
-        private set
     private var terminalSessionClient: TerminalSessionActivityClient? = null
     private var terminalViewClient: TerminalViewClient? = null
+    @JvmField
     var isVisible = false
-        private set
     private var isOnResumeAfterOnCreate = false
     private var isActivityRecreated = false
     private var isInvalidState = false
 
-    private var choiceFile =
-        registerForActivityResult(GetContentContract()) { uri: Uri? ->
-            handleFileUri(this, uri)
-        }
+    private lateinit var permissionHelper: PermissionHelper
+
+    private var choiceFile = registerForActivityResult(GetContentContract()) { uri: Uri? ->
+        handleFileUri(this, uri)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         isOnResumeAfterOnCreate = true
@@ -60,6 +60,10 @@ class MainActivity : AppBarActivity(), ServiceConnection {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        permissionHelper = PermissionHelper(this)
+        permissionHelper.registerPermissionLaunchers()
+        permissionHelper.requestStoragePermissions()
 
         setTerminalViewAndClients()
 
