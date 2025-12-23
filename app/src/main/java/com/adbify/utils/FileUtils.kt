@@ -248,6 +248,7 @@ object FileUtils {
                             return "${Environment.getExternalStorageDirectory()}/${split[1]}"
                         }
                     }
+
                     isDownloadsDocument(uri) -> {
                         val id = DocumentsContract.getDocumentId(uri)
                         val contentUri = ContentUris.withAppendedId(
@@ -256,6 +257,7 @@ object FileUtils {
                         )
                         return getDataColumn(context, contentUri, null, null)
                     }
+
                     isMediaDocument(uri) -> {
                         val docId = DocumentsContract.getDocumentId(uri)
                         val split = docId.split(":")
@@ -284,12 +286,7 @@ object FileUtils {
         return null
     }
 
-    fun getDataColumn(
-        context: Context,
-        uri: Uri?,
-        selection: String?,
-        selectionArgs: Array<String>?
-    ): String? {
+    fun getDataColumn(context: Context, uri: Uri?, selection: String?, selectionArgs: Array<String>?): String? {
         if (uri == null) return null
 
         val column = "_data"
