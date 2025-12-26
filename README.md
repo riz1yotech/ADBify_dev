@@ -251,7 +251,7 @@ The project includes a pre-configured keystore for public releases. The release 
 The project uses `key.properties` file for signing configuration:
 
 ```properties
-storeFile=../keystore.jks
+storeFile=/keystore.jks
 jksPassword=123456
 keyAlias=123456
 keyPassword=123456

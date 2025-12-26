@@ -5,9 +5,7 @@ import android.content.ClipboardManager
 import android.content.Context
 import com.adbify.MainActivity
 
-class TerminalSessionActivityClient(
-    private val activity: MainActivity
-) : TerminalSessionClientBase() {
+class TerminalSessionActivityClient(private val activity: MainActivity) : TerminalSessionClientBase() {
 
     var currentTerminalSession: TerminalSession? = null
         set(value) {
@@ -48,7 +46,7 @@ class TerminalSessionActivityClient(
 
     override fun onSessionFinished(finishedSession: TerminalSession) {
         activity.terminalService?.actionStopService()
-        activity.finishActivityIfNotFinishing()
+        if (!activity.isFinishing) activity.finish()
     }
 
     override fun onCopyTextToClipboard(session: TerminalSession, text: String?) {
@@ -78,11 +76,11 @@ class TerminalSessionActivityClient(
 
     override fun onColorsChanged(changedSession: TerminalSession) {}
 
-    override fun onTerminalCursorStateChange(enabled: Boolean) {
-        if (enabled && !activity.isVisible) {
+    override fun onTerminalCursorStateChange(state: Boolean) {
+        if (state && !activity.isVisible) {
             return
         }
-        activity.terminalView.setTerminalCursorBlinkerState(enabled, false)
+        activity.terminalView.setTerminalCursorBlinkerState(state, false)
     }
 
     override fun setTerminalShellPid(session: TerminalSession, pid: Int) {}

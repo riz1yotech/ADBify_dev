@@ -123,24 +123,6 @@ object AndroidUtilities {
         }
     }
 
-    fun toast(context: Context, msg: CharSequence?) {
-        toast(context, msg, Toast.LENGTH_SHORT)
-    }
-
-    fun toastLong(context: Context, msg: CharSequence?) {
-        toast(context, msg, Toast.LENGTH_LONG)
-    }
-
-    fun toast(context: Context, msg: CharSequence?, duration: Int) {
-        if (msg == null || duration == -1) {
-            return
-        }
-        sToast?.get()?.cancel()
-        val mToast = Toast.makeText(context, msg, duration)
-        mToast.show()
-        sToast = WeakReference(mToast)
-    }
-
     fun getStringBytes(src: String): ByteArray {
         return try {
             src.toByteArray(StandardCharsets.UTF_8)
@@ -160,3 +142,7 @@ object AndroidUtilities {
     }
 }
 
+fun Context.showToast(strResId: Int, duration: Int = Toast.LENGTH_SHORT) = showToast(getString(strResId), duration)
+fun Context.showToast(message: CharSequence, duration: Int = Toast.LENGTH_SHORT) {
+    Toast.makeText(this, message, duration).show()
+}

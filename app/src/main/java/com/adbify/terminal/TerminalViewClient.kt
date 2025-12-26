@@ -10,9 +10,7 @@ import com.adbify.R
 import com.adbify.utils.AndroidUtilities
 import com.adbify.utils.Utilities
 
-class TerminalViewClient(
-    private val activity: MainActivity
-) : TerminalViewClientBase() {
+class TerminalViewClient(private val activity: MainActivity) : TerminalViewClientBase() {
 
     private var terminalCursorBlinkerStateAlreadySet = false
 
@@ -77,7 +75,7 @@ class TerminalViewClient(
     @SuppressLint("RtlHardcoded")
     override fun onKeyDown(keyCode: Int, e: KeyEvent, session: TerminalSession): Boolean {
         if (keyCode == KeyEvent.KEYCODE_ENTER && !session.isRunning) {
-            activity.finishActivityIfNotFinishing()
+            if (!activity.isFinishing) activity.finish()
             return true
         }
         return false
@@ -85,7 +83,7 @@ class TerminalViewClient(
 
     override fun onKeyUp(keyCode: Int, e: KeyEvent): Boolean {
         if (keyCode == KeyEvent.KEYCODE_BACK && activity.terminalView.mEmulator == null) {
-            activity.finishActivityIfNotFinishing()
+            if (!activity.isFinishing) activity.finish()
             return true
         }
         return false

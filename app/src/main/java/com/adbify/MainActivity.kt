@@ -1,23 +1,23 @@
 package com.adbify
 
 import android.Manifest
-import android.content.*
+import android.content.ComponentName
+import android.content.Context
+import android.content.Intent
+import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.graphics.Typeface
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
-import android.text.method.LinkMovementMethod
 import android.view.Menu
 import android.view.MenuItem
-import android.view.View
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.adbify.app.AppBarActivity
 import com.adbify.databinding.ActivityMainBinding
-import com.adbify.databinding.DialogAboutBinding
 import com.adbify.terminal.TerminalService
 import com.adbify.terminal.TerminalService.LocalBinder
 import com.adbify.terminal.TerminalSession
@@ -26,13 +26,15 @@ import com.adbify.terminal.TerminalSettingsHelper.setKeepScreenOn
 import com.adbify.terminal.TerminalSettingsHelper.shouldKeepScreenOn
 import com.adbify.terminal.TerminalViewClient
 import com.adbify.terminal.view.TerminalView
-import com.adbify.utils.*
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.adbify.utils.FileUtils
+import com.adbify.utils.GetContentContract
+import com.adbify.utils.PermissionHelper
+import com.adbify.utils.Utilities
+import com.adbify.utils.showToast
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import rikka.core.util.ContextUtils
-import rikka.html.text.toHtml
 import java.io.File
 
 class MainActivity : AppBarActivity(), ServiceConnection {
@@ -41,6 +43,13 @@ class MainActivity : AppBarActivity(), ServiceConnection {
     var terminalService: TerminalService? = null
     private var terminalSessionClient: TerminalSessionActivityClient? = null
     private var terminalViewClient: TerminalViewClient? = null
+
+    private val adbCacheDir by lazy { ContextUtils.getExternalCacheFile(this, "adb_files_cache") }
+
+    val terminalView: TerminalView get() = binding.terminalView
+
+    val currentSession: TerminalSession? get() = binding.terminalView.currentSession
+
     @JvmField
     var isVisible = false
     private var isOnResumeAfterOnCreate = false
@@ -49,8 +58,8 @@ class MainActivity : AppBarActivity(), ServiceConnection {
 
     private lateinit var permissionHelper: PermissionHelper
 
-    private var choiceFile = registerForActivityResult(GetContentContract()) { uri: Uri? ->
-        handleFileUri(this, uri)
+    private var filePicker = registerForActivityResult(GetContentContract()) {
+        handleFileUri(this, it)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -60,32 +69,39 @@ class MainActivity : AppBarActivity(), ServiceConnection {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        permissionHelper = PermissionHelper(this)
-        permissionHelper.registerPermissionLaunchers()
-        permissionHelper.requestStoragePermissions()
-
+        getFullStoragePermission()
         setTerminalViewAndClients()
+        initTerminalServiceConnection()
+    }
 
+    private fun initTerminalServiceConnection() {
         try {
             val serviceIntent = Intent(this, TerminalService::class.java)
             startService(serviceIntent)
             if (!bindService(serviceIntent, this, 0))
                 throw RuntimeException("bindService() failed")
         } catch (e: Exception) {
-            AndroidUtilities.toastLong(this, getString(R.string.terminal_service_start_error))
+            showToast(R.string.terminal_service_start_error)
             isInvalidState = true
             return
         }
     }
 
+    private fun getFullStoragePermission() {
+        permissionHelper = PermissionHelper(this)
+        permissionHelper.registerPermissionLaunchers()
+        permissionHelper.requestStoragePermissions()
+    }
+
     private fun setTerminalViewAndClients() {
-        terminalSessionClient = TerminalSessionActivityClient(this)
-        terminalViewClient = TerminalViewClient(this)
-        binding.terminalView.setTerminalViewClient(terminalViewClient)
-        binding.terminalView.post {
-            binding.terminalView.setTypeface(Typeface.MONOSPACE)
+        TerminalViewClient(this).apply {
+            binding.terminalView.setTerminalViewClient(this)
+            binding.terminalView.post { binding.terminalView.setTypeface(Typeface.MONOSPACE) }
+            terminalViewClient = this
+            terminalViewClient?.onCreate()
         }
-        terminalViewClient?.onCreate()
+
+        terminalSessionClient = TerminalSessionActivityClient(this)
         terminalSessionClient?.onCreate()
     }
 
@@ -98,13 +114,12 @@ class MainActivity : AppBarActivity(), ServiceConnection {
         terminalService = (service as LocalBinder).service
         if (terminalService != null) {
             terminalService!!.setTerminalSessionClient(terminalSessionClient)
-            terminalSessionClient?.currentTerminalSession =
-                terminalSessionClient?.currentTerminalSession
+            terminalSessionClient?.currentTerminalSession = terminalSessionClient?.currentTerminalSession
         } else isInvalidState = true
     }
 
     override fun onServiceDisconnected(name: ComponentName?) {
-        finishActivityIfNotFinishing()
+        if (!isFinishing) finish()
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -115,10 +130,10 @@ class MainActivity : AppBarActivity(), ServiceConnection {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        val session = currentSession
+
         when (item.itemId) {
             R.id.action_attachment -> {
-                attachNewFile()
+                pickAFile()
                 return true
             }
 
@@ -128,7 +143,7 @@ class MainActivity : AppBarActivity(), ServiceConnection {
             }
 
             R.id.action_kill -> {
-                showKillSessionDialog(session)
+                currentSession?.let { Dialogs.showKillSessionDialog(this, it) }
                 return true
             }
 
@@ -139,7 +154,7 @@ class MainActivity : AppBarActivity(), ServiceConnection {
             }
 
             R.id.action_about -> {
-                showAboutDialog()
+                Dialogs.showAboutDialog(this)
                 return true
             }
 
@@ -192,40 +207,6 @@ class MainActivity : AppBarActivity(), ServiceConnection {
         super.onBackPressed()
     }
 
-    val terminalView: TerminalView
-        get() = binding.terminalView
-
-    val currentSession: TerminalSession?
-        get() = binding.terminalView.currentSession
-
-    private fun showAboutDialog() {
-        val binding = DialogAboutBinding.inflate(layoutInflater, null, false)
-        binding.desInfo.movementMethod = LinkMovementMethod.getInstance()
-        binding.desInfo.text = getString(
-            R.string.about_view_source_code,
-            "<b><a href=\"https://github.com/RohitVerma882/Adbify\">GitHub</a></b>"
-        ).toHtml()
-        binding.icon.setImageBitmap(
-            AppIconCache.getOrLoadBitmap(
-                this,
-                applicationInfo,
-                android.os.Process.myUid() / 100000,
-                resources.getDimensionPixelOffset(R.dimen.default_app_icon_size)
-            )
-        )
-        binding.versionName.text = getString(R.string.app_version)
-        MaterialAlertDialogBuilder(this)
-            .setView(binding.root)
-            .show()
-    }
-
-    fun finishActivityIfNotFinishing() {
-        if (this@MainActivity.isFinishing) {
-            return
-        }
-        finish()
-    }
-
     private fun toggleKeepScreenOn() {
         if (binding.terminalView.keepScreenOn) {
             binding.terminalView.keepScreenOn = false
@@ -236,53 +217,28 @@ class MainActivity : AppBarActivity(), ServiceConnection {
         }
     }
 
-    private fun showKillSessionDialog(session: TerminalSession?) {
-        if (session == null) return
-        MaterialAlertDialogBuilder(this)
-            .setMessage(R.string.title_confirm_kill_process)
-            .setPositiveButton(
-                R.string.yes
-            ) { p1: DialogInterface, _: Int ->
-                p1.dismiss()
-                session.finishIfRunning()
-            }
-            .setNegativeButton(R.string.no) { p1: DialogInterface, _: Int ->
-                p1.dismiss()
-            }
-            .show()
-    }
-
     private fun appendLineToTerminal(line: String?) {
-        val session = currentSession ?: return
-        if (!line.isNullOrBlank()) {
-            session.emulator.paste(Utilities.quote(line))
+        if (!line.isNullOrBlank() && currentSession != null) {
+            currentSession!!.emulator.paste(Utilities.quote(line))
         }
     }
 
-    private fun attachNewFile() {
-        if (Build.VERSION.SDK_INT >= 33
-            || (ContextCompat.checkSelfPermission(
-                this, Manifest.permission.READ_EXTERNAL_STORAGE
-            )
-                    == PackageManager.PERMISSION_GRANTED)
-        ) {
-            choiceFile.launch("*/*")
+    private fun pickAFile() {
+        if (Build.VERSION.SDK_INT >= 33 || (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED)) {
+            filePicker.launch("*/*")
         } else {
             try {
-                AndroidUtilities.toastLong(this, getString(R.string.ask_for_permission))
-                ActivityCompat.requestPermissions(
-                    this, arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
-                    PERMISSION_READ_FILE_CODE
-                )
+                showToast(R.string.ask_for_permission)
+                ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE), PERMISSION_READ_FILE_CODE)
             } catch (e: Exception) {
-                choiceFile.launch("*/*")
+                filePicker.launch("*/*")
             }
         }
     }
 
     private fun handleFileUri(context: Context, uri: Uri?) {
         if (uri == null) {
-            AndroidUtilities.toastLong(context, getString(R.string.file_attach_failed))
+            showToast(R.string.file_attach_failed)
             return
         }
         val path = FileUtils.getPath(this@MainActivity, uri)
@@ -290,21 +246,17 @@ class MainActivity : AppBarActivity(), ServiceConnection {
             val finalPath = path.removePrefix("file:")
             appendLineToTerminal(finalPath)
         } else {
-            showLoading()
             lifecycleScope.launch(Dispatchers.IO) {
                 if (adbCacheDir.exists()) adbCacheDir.deleteRecursively()
                 if (!adbCacheDir.exists()) adbCacheDir.mkdirs()
-                var output = FileUtils.copyUriToPath(context, uri, adbCacheDir.absolutePath)
-                if (output.isNullOrBlank()) output = ""
-                withContext(Dispatchers.Main) {
-                    hideLoading()
-                    appendLineToTerminal(output)
+                FileUtils.copyUriToPath(context, uri, adbCacheDir.absolutePath)?.let {
+                    withContext(Dispatchers.Main) { appendLineToTerminal(it) }
                 }
             }
         }
     }
 
-    private fun showLoading() {
+    /*private fun showLoading() {
         binding.linearProgressIndicator.visibility = View.VISIBLE
         terminalView.isEnabled = false
     }
@@ -312,12 +264,7 @@ class MainActivity : AppBarActivity(), ServiceConnection {
     private fun hideLoading() {
         binding.linearProgressIndicator.visibility = View.GONE
         terminalView.isEnabled = true
-    }
-
-    private val adbCacheDir: File
-        get() {
-            return ContextUtils.getExternalCacheFile(this, "adb_files_cache")
-        }
+    }*/
 
     companion object {
         private const val ARG_ACTIVITY_RECREATED = "activity_recreated"
