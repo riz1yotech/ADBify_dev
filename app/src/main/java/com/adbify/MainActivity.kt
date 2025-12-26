@@ -1,20 +1,15 @@
 package com.adbify
 
-import android.Manifest
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
-import android.content.pm.PackageManager
 import android.graphics.Typeface
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
 import android.view.Menu
 import android.view.MenuItem
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.adbify.app.AppBarActivity
 import com.adbify.databinding.ActivityMainBinding
@@ -71,11 +66,11 @@ class MainActivity : AppBarActivity(), ServiceConnection {
 
         getFullStoragePermission()
         setTerminalViewAndClients()
-        setupFloatingOptions()
+        setupCommandButtons()
         initTerminalServiceConnection()
     }
 
-    private fun setupFloatingOptions() {
+    private fun setupCommandButtons() {
         binding.btnCommands.setOnClickListener {
             Dialogs.showFloatingOptionsMenu(it) { command ->
                 binding.terminalView.currentSession?.emulator?.paste(command)
@@ -93,6 +88,7 @@ class MainActivity : AppBarActivity(), ServiceConnection {
             if (!bindService(serviceIntent, this, 0))
                 throw RuntimeException("bindService() failed")
         } catch (e: Exception) {
+            e.printStackTrace()
             showToast(R.string.terminal_service_start_error)
             isInvalidState = true
             return
@@ -206,8 +202,7 @@ class MainActivity : AppBarActivity(), ServiceConnection {
         }
         try {
             unbindService(this)
-        } catch (e: Exception) {
-            // ignore.
+        } catch (_: Exception) {
         }
         super.onDestroy()
     }
@@ -231,16 +226,8 @@ class MainActivity : AppBarActivity(), ServiceConnection {
 
 
     private fun pickAFile() {
-        if (Build.VERSION.SDK_INT >= 33 || (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED)) {
-            filePicker.launch("*/*")
-        } else {
-            try {
-                showToast(R.string.ask_for_permission)
-                ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE), PERMISSION_READ_FILE_CODE)
-            } catch (e: Exception) {
-                filePicker.launch("*/*")
-            }
-        }
+        if (permissionHelper.hasStoragePermissions()) filePicker.launch("*/*")
+        else permissionHelper.requestStoragePermissions()
     }
 
     private fun handleFileUri(context: Context, uri: Uri?) {
@@ -266,19 +253,8 @@ class MainActivity : AppBarActivity(), ServiceConnection {
         }
     }
 
-    /*private fun showLoading() {
-        binding.linearProgressIndicator.visibility = View.VISIBLE
-        terminalView.isEnabled = false
-    }
-
-    private fun hideLoading() {
-        binding.linearProgressIndicator.visibility = View.GONE
-        terminalView.isEnabled = true
-    }*/
-
     companion object {
         private const val ARG_ACTIVITY_RECREATED = "activity_recreated"
-        private const val PERMISSION_READ_FILE_CODE = 880
 
         fun newInstance(context: Context): Intent {
             val intent = Intent(context, MainActivity::class.java)

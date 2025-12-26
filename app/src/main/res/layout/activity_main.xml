@@ -7,18 +7,6 @@
     android:paddingTop="?actionBarSize"
     app:fitsSystemWindowsInsets="bottom|top">
 
-    <!--<com.google.android.material.progressindicator.LinearProgressIndicator
-        android:id="@+id/linearProgressIndicator"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:indeterminate="true"
-        android:visibility="gone"
-        app:layout_constraintBottom_toTopOf="@id/terminal_view"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:trackThickness="3dp" />-->
-
     <com.adbify.terminal.view.TerminalView
         android:id="@+id/terminal_view"
         android:layout_width="0dp"

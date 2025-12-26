@@ -15,8 +15,6 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.adbify.MainActivity
 import com.adbify.R
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.MainScope
 import java.io.File
 
 class TerminalService : Service() {
@@ -24,8 +22,6 @@ class TerminalService : Service() {
 
     private var terminalSession: TerminalSession? = null
     private var terminalSessionActivityClient: TerminalSessionActivityClient? = null
-
-    private var scope: CoroutineScope = MainScope()
 
     override fun onCreate() {
         super.onCreate()
@@ -60,9 +56,7 @@ class TerminalService : Service() {
         try {
             startForeground(NOTIFICATION_CHANNEL_ID, buildNotification())
         } catch (e: Throwable) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
-                && e is ForegroundServiceStartNotAllowedException
-            ) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && e is ForegroundServiceStartNotAllowedException) {
                 Log.e(TAG, "start service in Foreground failed: ${e.message}")
             }
         }
@@ -101,11 +95,7 @@ class TerminalService : Service() {
         val stopIntent = Intent(this, TerminalService::class.java).setAction(ACTION_STOP_SERVICE)
         val contentIntent = MainActivity.newInstance(this)
         return NotificationCompat.Builder(this, "" + NOTIFICATION_CHANNEL_ID)
-            .setContentIntent(
-                PendingIntent.getActivity(
-                    this, 0, contentIntent, PendingIntent.FLAG_IMMUTABLE
-                )
-            )
+            .setContentIntent(PendingIntent.getActivity(this, 0, contentIntent, PendingIntent.FLAG_IMMUTABLE))
             .setContentTitle(getString(R.string.notification_terminal_session))
             .setShowWhen(false)
             .setSilent(true)

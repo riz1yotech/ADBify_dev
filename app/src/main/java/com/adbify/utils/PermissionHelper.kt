@@ -65,25 +65,7 @@ class PermissionHelper(private val activity: AppCompatActivity) {
     /**
      * Check if storage permissions are granted
      */
-    fun hasStoragePermissions(): Boolean {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            // Android 11+ - Check MANAGE_EXTERNAL_STORAGE
-            Environment.isExternalStorageManager()
-        } else {
-            // Android 10 and below - Check READ/WRITE_EXTERNAL_STORAGE
-            val readPermission = ContextCompat.checkSelfPermission(
-                activity,
-                Manifest.permission.READ_EXTERNAL_STORAGE
-            ) == PackageManager.PERMISSION_GRANTED
-
-            val writePermission = ContextCompat.checkSelfPermission(
-                activity,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE
-            ) == PackageManager.PERMISSION_GRANTED
-
-            readPermission && writePermission
-        }
-    }
+    fun hasStoragePermissions() = PermissionHelper.hasStoragePermissions(activity)
 
     /**
      * Request storage permissions based on Android version
@@ -104,26 +86,14 @@ class PermissionHelper(private val activity: AppCompatActivity) {
         } else {
             // Android 10 and below - Request READ/WRITE_EXTERNAL_STORAGE
             val permissionsNeeded = mutableListOf<String>()
-
-            if (ContextCompat.checkSelfPermission(
-                    activity,
-                    Manifest.permission.READ_EXTERNAL_STORAGE
-                ) != PackageManager.PERMISSION_GRANTED
-            ) {
+            if (ContextCompat.checkSelfPermission(activity, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED)
                 permissionsNeeded.add(Manifest.permission.READ_EXTERNAL_STORAGE)
-            }
 
-            if (ContextCompat.checkSelfPermission(
-                    activity,
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE
-                ) != PackageManager.PERMISSION_GRANTED
-            ) {
+            if (ContextCompat.checkSelfPermission(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED)
                 permissionsNeeded.add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-            }
 
-            if (permissionsNeeded.isNotEmpty()) {
-                storagePermissionLauncher?.launch(permissionsNeeded.toTypedArray())
-            }
+            if (permissionsNeeded.isNotEmpty()) storagePermissionLauncher?.launch(permissionsNeeded.toTypedArray())
+
         }
     }
 
@@ -133,17 +103,12 @@ class PermissionHelper(private val activity: AppCompatActivity) {
          */
         fun hasStoragePermissions(context: Context): Boolean {
             return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                // Android 11+ - Check MANAGE_EXTERNAL_STORAGE
                 Environment.isExternalStorageManager()
             } else {
-                val readPermission = ContextCompat.checkSelfPermission(
-                    context,
-                    Manifest.permission.READ_EXTERNAL_STORAGE
-                ) == PackageManager.PERMISSION_GRANTED
-
-                val writePermission = ContextCompat.checkSelfPermission(
-                    context,
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE
-                ) == PackageManager.PERMISSION_GRANTED
+                // Android 10 and below - Check READ/WRITE_EXTERNAL_STORAGE
+                val readPermission = ContextCompat.checkSelfPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+                val writePermission = ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
 
                 readPermission && writePermission
             }
