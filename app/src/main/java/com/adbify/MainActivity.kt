@@ -78,11 +78,11 @@ class MainActivity : AppBarActivity(), ServiceConnection {
     private fun setupFloatingOptions() {
         binding.btnCommands.setOnClickListener {
             Dialogs.showFloatingOptionsMenu(it) { command ->
-                currentSession?.emulator?.paste(command)
+                binding.terminalView.currentSession?.emulator?.paste(command)
             }
         }
         binding.btnRun.setOnClickListener {
-            //currentSession?.
+            binding.terminalView.currentSession?.write("\r")
         }
     }
 

@@ -50,11 +50,14 @@ object Dialogs {
             "adb devices",
             "adb kill-server",
             "adb start-server",
+            "adb tcpip 5555",
+            "adb connect ",
             "adb connect localhost:5555",
-            "adb reboot",
-            "adb reboot bootloader",
-            "adb reboot recovery",
-            "adb shell ",
+            "adb disconnect",
+            "adb install ",
+            "adb pair ",
+            "adb shell dpm set-device-owner com.example.silent_installapp/.SilentInstallAdminReceiver",
+            "clear",
         )
 
         val popup = androidx.appcompat.widget.PopupMenu(anchorView.context, anchorView)

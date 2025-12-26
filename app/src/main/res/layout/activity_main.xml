@@ -29,30 +29,33 @@
         android:scrollbarStyle="insideOverlay"
         android:scrollbarThumbVertical="@drawable/terminal_scroll_shape"
         android:scrollbars="vertical"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/layout_btns"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         tools:ignore="UnusedAttribute,UnusedResources" />
 
     <LinearLayout
+        android:id="@+id/layout_btns"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_commands"
+            style="@style/Widget.Material3.Button.ElevatedButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Commands" />
+            android:text="Commands"
+            app:icon="@drawable/ic_arrow_up" />
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_run"
-            android:visibility="gone"
+            style="@style/Widget.Material3.Button.IconButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Run" />
+            app:icon="@drawable/ic_arrow_right" />
     </LinearLayout>
 
 
