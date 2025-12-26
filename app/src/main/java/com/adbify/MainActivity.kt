@@ -8,6 +8,10 @@ import android.graphics.Typeface
 import android.net.Uri
 import android.os.Bundle
 import android.os.IBinder
+import android.view.KeyEvent.KEYCODE_DPAD_DOWN
+import android.view.KeyEvent.KEYCODE_DPAD_LEFT
+import android.view.KeyEvent.KEYCODE_DPAD_RIGHT
+import android.view.KeyEvent.KEYCODE_DPAD_UP
 import android.view.Menu
 import android.view.MenuItem
 import androidx.lifecycle.lifecycleScope
@@ -76,9 +80,12 @@ class MainActivity : AppBarActivity(), ServiceConnection {
                 binding.terminalView.currentSession?.emulator?.paste(command)
             }
         }
-        binding.btnRun.setOnClickListener {
-            binding.terminalView.currentSession?.write("\r")
-        }
+        binding.btnRun.setOnClickListener { binding.terminalView.currentSession?.write("\r") }
+
+        binding.btnLeft.setOnClickListener { binding.terminalView.handleKeyCode(KEYCODE_DPAD_LEFT, 0) }
+        binding.btnRight.setOnClickListener { binding.terminalView.handleKeyCode(KEYCODE_DPAD_RIGHT, 0) }
+        binding.btnUp.setOnClickListener { binding.terminalView.handleKeyCode(KEYCODE_DPAD_UP, 0) }
+        binding.btnDown.setOnClickListener { binding.terminalView.handleKeyCode(KEYCODE_DPAD_DOWN, 0) }
     }
 
     private fun initTerminalServiceConnection() {
