@@ -71,7 +71,19 @@ class MainActivity : AppBarActivity(), ServiceConnection {
 
         getFullStoragePermission()
         setTerminalViewAndClients()
+        setupFloatingOptions()
         initTerminalServiceConnection()
+    }
+
+    private fun setupFloatingOptions() {
+        binding.btnCommands.setOnClickListener {
+            Dialogs.showFloatingOptionsMenu(it) { command ->
+                currentSession?.emulator?.paste(command)
+            }
+        }
+        binding.btnRun.setOnClickListener {
+            //currentSession?.
+        }
     }
 
     private fun initTerminalServiceConnection() {
@@ -217,11 +229,6 @@ class MainActivity : AppBarActivity(), ServiceConnection {
         }
     }
 
-    private fun appendLineToTerminal(line: String?) {
-        if (!line.isNullOrBlank() && currentSession != null) {
-            currentSession!!.emulator.paste(Utilities.quote(line))
-        }
-    }
 
     private fun pickAFile() {
         if (Build.VERSION.SDK_INT >= 33 || (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED)) {
@@ -241,16 +248,19 @@ class MainActivity : AppBarActivity(), ServiceConnection {
             showToast(R.string.file_attach_failed)
             return
         }
+
+        fun addToTerminal(line: String) = currentSession?.emulator?.paste(Utilities.quote(line))
+
         val path = FileUtils.getPath(this@MainActivity, uri)
         if (path != null && File(path).canRead()) {
             val finalPath = path.removePrefix("file:")
-            appendLineToTerminal(finalPath)
+            addToTerminal(finalPath)
         } else {
             lifecycleScope.launch(Dispatchers.IO) {
                 if (adbCacheDir.exists()) adbCacheDir.deleteRecursively()
                 if (!adbCacheDir.exists()) adbCacheDir.mkdirs()
                 FileUtils.copyUriToPath(context, uri, adbCacheDir.absolutePath)?.let {
-                    withContext(Dispatchers.Main) { appendLineToTerminal(it) }
+                    withContext(Dispatchers.Main) { addToTerminal(it) }
                 }
             }
         }

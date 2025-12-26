@@ -2,6 +2,7 @@ package com.adbify
 
 import android.content.Context
 import android.text.method.LinkMovementMethod
+import android.view.View
 import com.adbify.databinding.DialogAboutBinding
 import com.adbify.terminal.TerminalSession
 import com.adbify.utils.AppIconCache
@@ -42,5 +43,30 @@ object Dialogs {
             }
             .setNegativeButton(R.string.no) { _, _ -> }
             .show()
+    }
+
+    fun showFloatingOptionsMenu(anchorView: View, action: (command: String) -> Unit) {
+        val commands = listOf(
+            "adb devices",
+            "adb kill-server",
+            "adb start-server",
+            "adb connect localhost:5555",
+            "adb reboot",
+            "adb reboot bootloader",
+            "adb reboot recovery",
+            "adb shell ",
+        )
+
+        val popup = androidx.appcompat.widget.PopupMenu(anchorView.context, anchorView)
+        commands.forEachIndexed { index, command ->
+            popup.menu.add(0, index, index, "${index+1}. $command")
+        }
+
+        popup.setOnMenuItemClickListener { menuItem ->
+            action(commands[menuItem.itemId])
+            true
+        }
+
+        popup.show()
     }
 }
