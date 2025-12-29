@@ -1,6 +1,7 @@
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
+    id 'com.google.devtools.ksp'
     id 'dev.rikka.tools.materialthemebuilder'
 }
 
@@ -13,7 +14,7 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace "com.adbify"
-    compileSdk 36
+    compileSdk rootProject.compileSdk
     buildToolsVersion rootProject.ext.buildToolsVersion
 
     defaultConfig {
@@ -118,4 +119,9 @@ dependencies {
     implementation "androidx.lifecycle:lifecycle-common-java8:$lifecycle_version"
 
     implementation 'me.zhanghai.android.appiconloader:appiconloader:1.5.0'
+
+    // Main Moshi library
+    implementation("com.squareup.moshi:moshi:1.15.2")
+    // Code generator (KSP)
+    ksp("com.squareup.moshi:moshi-kotlin-codegen:1.15.2")
 }

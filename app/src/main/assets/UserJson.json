@@ -1,0 +1,43 @@
+[
+  {
+    "id": "user_001",
+    "name": "John Doe",
+    "email": "john.doe@example.com"
+  },
+  {
+    "id": "user_002",
+    "name": "Jane Smith",
+    "email": "jane.smith@example.com"
+  },
+  {
+    "id": "user_003",
+    "name": "Alex Johnson",
+    "email": "alex.johnson@example.com"
+  },
+  {
+    "id": "user_004",
+    "name": "Maria Garcia",
+    "email": "maria.garcia@example.com"
+  },
+  {
+    "id": "user_005",
+    "name": "David Chen",
+    "email": "david.chen@example.com"
+  },
+  {
+    "id": "user_006",
+    "name": "Sarah Williams",
+    "email": "sarah.williams@example.com"
+  },
+  {
+    "id": "user_007",
+    "name": "Michael Brown",
+    "email": "michael.brown@example.com"
+  },
+  {
+    "id": "user_008",
+    "name": "Emily Davis",
+    "email": "emily.davis@example.com"
+  }
+]
+

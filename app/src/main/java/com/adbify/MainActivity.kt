@@ -27,6 +27,7 @@ import com.adbify.terminal.TerminalViewClient
 import com.adbify.terminal.view.TerminalView
 import com.adbify.utils.FileUtils
 import com.adbify.utils.GetContentContract
+import com.adbify.utils.MoshiUtil
 import com.adbify.utils.PermissionHelper
 import com.adbify.utils.Utilities
 import com.adbify.utils.showToast
@@ -72,6 +73,8 @@ class MainActivity : AppBarActivity(), ServiceConnection {
         setTerminalViewAndClients()
         setupCommandButtons()
         initTerminalServiceConnection()
+
+        Utilities.adbPortTest()
     }
 
     private fun setupCommandButtons() {
